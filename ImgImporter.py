@@ -1,5 +1,7 @@
 import numpy as np
 
-A=np.array([2,3]);
-B=np.array([2,3]);
-C=np.array([2,3]);
+
+def getDataset():
+    XTrain = np.array([2, 2])
+    YTrain = np.array([2, 2])
+    return XTrain, YTrain
