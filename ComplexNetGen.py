@@ -15,6 +15,8 @@ from keras.datasets import cifar10
 from keras import regularizers
 from keras.callbacks import LearningRateScheduler
 import numpy as np
+from keras.utils.vis_utils import plot_model
+
 
 def lr_schedule(epoch):
     lrate = 0.001
@@ -71,6 +73,7 @@ if __name__ == '__main__':
     model.add(Dense(num_classes, activation='softmax'))
 
     model.summary()
+    plot_model(model, to_file='plots/complex_model_plot.png', show_shapes=True, show_layer_names=True)
 
     #data augmentation
     datagen = ImageDataGenerator(
