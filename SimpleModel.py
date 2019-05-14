@@ -4,13 +4,13 @@ from keras.models import Sequential
 from keras.utils import np_utils
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Dense, Activation, Flatten, Dropout, BatchNormalization
-from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Conv2D, MaxPooling2D, Lambda
 from keras.datasets import cifar10
 from keras import regularizers
 from keras.callbacks import LearningRateScheduler
 
 
-def define_model(structure, filters, dropouts, init_shape, weight_decay, num_classes):
+def define_model(structure, filters, dropouts, init_shape, weight_decay, num_classes, temperature = 1):
     """
     Define the simple network, based in the params passed in the "structure" variable. Definitions:
     Small pack: conv2d -> elu -> BN
@@ -27,8 +27,8 @@ def define_model(structure, filters, dropouts, init_shape, weight_decay, num_cla
     # Check that the input of the function has sense
 
     assert len(structure)==len(filters)==len(dropouts), "The length of the inputs don't match"
-    assert min(structure) <= 0, "All the Big Packs should include at least one Small Pack"
-    assert min(dropouts) < 0 or max(dropouts) > 1, "Drop outs should be between 0 an 1"
+    assert min(structure) > 0, "All the Big Packs should include at least one Small Pack"
+    assert min(dropouts) > 0 or max(dropouts) < 1, "Drop outs should be between 0 an 1"
 
 
     model = Sequential()
@@ -52,7 +52,9 @@ def define_model(structure, filters, dropouts, init_shape, weight_decay, num_cla
 
 
     model.add(Flatten())
-    model.add(Dense(num_classes, activation='softmax'))
+    model.add(Dense(num_classes))
+    model.add(Lambda(lambda x: x * temperature))
+    model.add(Activation('softmax'))
 
     model.summary()
 

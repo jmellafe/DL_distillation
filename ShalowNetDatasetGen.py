@@ -26,15 +26,18 @@ def getDataset():
     #y_trin/test Soft are the results of the complex model WITHOUT SOFTMAX!
     #For less time computing, The datasets can be loaded from the file datasets
     (x_train, y_trainHard), (x_test, y_testHard) = cifar10.load_data()
-    x_train = x_train.astype('float32')
-    x_test = x_test.astype('float32')
+    # x_train = x_train[:1000].astype('float32')
+    # x_test = x_test[:1000].astype('float32')
+
+    y_trainHard = y_trainHard[:1000]
+    y_testHard = y_testHard[:1000]
 
     mean = np.mean(x_train, axis=(0, 1, 2, 3))
     std = np.std(x_train, axis=(0, 1, 2, 3))
     x_train = (x_train - mean) / (std + 1e-7) #Z transform of input
     x_test = (x_test - mean) / (std + 1e-7)
 
-    num_classes = 10;
+    num_classes = 10
     y_trainHard = np_utils.to_categorical(y_trainHard, num_classes) #2 One hot encoding
     y_testHard = np_utils.to_categorical(y_testHard, num_classes)
 
