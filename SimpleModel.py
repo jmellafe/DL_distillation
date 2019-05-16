@@ -53,9 +53,9 @@ def define_model(structure, filters, dropouts, init_shape, weight_decay, num_cla
 
     model.add(Flatten())
     model.add(Dense(num_classes))
-    model.add(Lambda(lambda x: x * temperature))
+    model.add(Lambda(lambda x: x / temperature))
     model.add(Activation('softmax'))
 
-    model.summary()
+    # model.summary()
 
     return model
