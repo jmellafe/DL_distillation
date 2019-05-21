@@ -1,21 +1,28 @@
+"""
+This scripts explore the performance of the shallow network for different temperatures, saving
+all the models and ploting accuracy vs temperature
+"""
+
 from SimpleModel import define_model
 from ShalowNetDatasetGen import getDataset
 
 from scipy.special import softmax
 import numpy as np
-from keras.utils import np_utils
-from keras.datasets import cifar10
 from matplotlib import pyplot as plt
 from time import gmtime, strftime
 import json
 
 
 def explore_config_temp(structure, filters, dropouts, num_classes, T, x_transfer, y_transfer_soft,
-                        x_val, y_val_soft):
+                        x_val, y_val_hard):
+    """
+    Training, testing and history ploting for a specific temperature. Returns final loss and
+    accuracy for validation set (hard true labels)
+    """
+    #filename based in datetime and temperature, to handle correctly the different versions
     fname = 'models/%s-' % (str(structure)) + strftime("%Y%m%d-%H%M%S", gmtime()) + '-%d'%int(T)
 
     y_transfer_soft = softmax(y_transfer_soft / T, axis=1)
-    y_val_soft = softmax(y_val_soft / T, axis=1)
 
     model = define_model(
         structure=structure,
@@ -32,7 +39,7 @@ def explore_config_temp(structure, filters, dropouts, num_classes, T, x_transfer
 
     batch_size = 64
 
-    history = model.fit(x_transfer, y_transfer_soft, validation_data=(x_val, y_val_soft),
+    history = model.fit(x_transfer, y_transfer_soft, validation_data=(x_val, y_val_hard),
                         batch_size=batch_size, epochs=20)
 
     # summarize history for accuracy
@@ -98,7 +105,7 @@ if __name__ == "__main__":
             x_transfer=x_transfer,
             y_transfer_soft=y_transfer_soft,
             x_val=x_val,
-            y_val_soft=y_val_hard
+            y_val_hard=y_val_hard
         )
 
         results.append([T, acc])
@@ -116,4 +123,4 @@ if __name__ == "__main__":
     ax1.set_xlabel("Temperature")
     ax1.set_ylabel("Accuracy")
 
-    plt.savefig("models/final_result.png")
+    plt.savefig("models/temp_exploration.png")

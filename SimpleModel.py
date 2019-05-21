@@ -1,13 +1,13 @@
+"""
+Definition of the networks.
+"""
 
-import keras
+
+
 from keras.models import Model, Sequential
-from keras.utils import np_utils
-from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Dense, Activation, Flatten, Dropout, BatchNormalization
-from keras.layers import Conv2D, MaxPooling2D, Lambda, Input, Softmax
-from keras.datasets import cifar10
+from keras.layers import Conv2D, MaxPooling2D, Lambda, Input
 from keras import regularizers
-from keras.callbacks import LearningRateScheduler
 
 
 def define_model(structure, filters, dropouts, init_shape, weight_decay, num_classes, temperature = 1):
@@ -22,6 +22,13 @@ def define_model(structure, filters, dropouts, init_shape, weight_decay, num_cla
     :param dropouts: drop-out ratio for the drop out layer at the end of each Big Pack. for the
     complex network dropouts = [0.2, 0.3, 0.4]
     :return: model
+
+    At this function is only used with the next params during the temperature and weight exploration:
+            structure=[1, 1, 1],
+            filters=[32, 64, 128],
+            dropouts=[0.2, 0.3, 0.4],
+            num_classes=10,
+            weight_decay=1e-4
     """
 
     # Check that the input of the function has sense
@@ -30,7 +37,7 @@ def define_model(structure, filters, dropouts, init_shape, weight_decay, num_cla
     assert min(structure) > 0, "All the Big Packs should include at least one Small Pack"
     assert min(dropouts) > 0 or max(dropouts) < 1, "Drop outs should be between 0 an 1"
 
-
+    #Definition of the network
     model = Sequential()
 
     for i, number_small_pack in enumerate(structure):
@@ -63,7 +70,12 @@ def define_model(structure, filters, dropouts, init_shape, weight_decay, num_cla
 
 def define_model_weighted(structure, filters, dropouts, init_shape, weight_decay, num_classes, weight = 1., temperature = 1):
     """
-    Define the simple network, based in the params passed in the "structure" variable. Definitions:
+    This model is a modified version of the previous one. The only difference is that this has two
+    outputs: one with soft labels depending on the temperature (same as previous model) and an
+    additional output with the hard labels (softmax with temperature 1). The soft labels are trained
+    by distillation from the complex network and the hard labels with the real labels from the dataset.
+    Cross-entropy loss for both outputs but with different weights, Temperature-normalized.
+
     Small pack: conv2d -> elu -> BN
     Big Pack: at least 1 small pack + maxPool + DropOut
     :param structure: list of integers. Each number indicates one "Big Pack", and the number itself
@@ -81,7 +93,7 @@ def define_model_weighted(structure, filters, dropouts, init_shape, weight_decay
     assert min(structure) > 0, "All the Big Packs should include at least one Small Pack"
     assert min(dropouts) > 0 or max(dropouts) < 1, "Drop outs should be between 0 an 1"
 
-
+    # Definition of the network, Functional API in order to handle multiple outputs
     inp = Input(init_shape)
 
     for i, number_small_pack in enumerate(structure):
@@ -114,7 +126,7 @@ def define_model_weighted(structure, filters, dropouts, init_shape, weight_decay
         "out_hard": "categorical_crossentropy",
         "out_soft": "categorical_crossentropy",
     }
-    lossWeights = {"out_soft": 1.0, "out_hard": weight}
+    lossWeights = {"out_soft": temperature**2, "out_hard": weight}
 
     model.compile(loss=losses, loss_weights = lossWeights, optimizer='adam', metrics=['accuracy'])
 

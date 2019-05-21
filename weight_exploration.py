@@ -1,3 +1,8 @@
+"""
+This script, based in temp_exploration.py, explores the performance of the shallow network for
+different loss weighting
+"""
+
 from SimpleModel import define_model_weighted
 from ShalowNetDatasetGen import getDataset
 
@@ -14,6 +19,10 @@ import keras.backend as K
 
 def explore_config_temp(structure, filters, dropouts, num_classes, T, weight, x_transfer, y_transfer_soft, y_transfer_hard,
                         x_val, y_val_soft, y_val_hard):
+    """
+    Training, testing and history ploting for a specific loss weight. Returns final loss and
+    accuracy for validation set (hard true labels)
+    """
     fname = 'models/%s-' % (str(structure)) + strftime("%Y%m%d-%H%M%S", gmtime()) + '-%.2f'%int(weight)
 
     y_transfer_soft = softmax(y_transfer_soft / T, axis=1)
